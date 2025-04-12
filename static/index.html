@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ECG Image Classifier</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background: #f4f4f4;
+      text-align: center;
+    }
+    input, button {
+      padding: 10px;
+      margin: 15px;
+    }
+    #preview {
+      max-width: 300px;
+      margin-top: 20px;
+    }
+    #result {
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>ECG Image Classifier</h1>
+
+  <input type="file" id="imageInput" accept="image/*">
+  <button onclick="uploadImage()">Predict</button>
+
+  <div>
+    <img id="preview" src="" alt="Preview" />
+  </div>
+
+  <div id="result"></div>
+
+  <script>
+    const preview = document.getElementById('preview');
+    const resultDiv = document.getElementById('result');
+    const imageInput = document.getElementById('imageInput');
+
+    imageInput.addEventListener('change', () => {
+      const file = imageInput.files[0];
+      if (file) {
+        preview.src = URL.createObjectURL(file);
+      }
+    });
+
+    async function uploadImage() {
+      const file = imageInput.files[0];
+      if (!file) {
+        alert("Please select an image.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+      resultDiv.innerText = "Processing...";
+
+      try {
+        const response = await fetch("/predict/", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          resultDiv.innerText = `Prediction: ${data.prediction.toUpperCase()} (Confidence: ${(data.probability * 100).toFixed(2)}%)`;
+        } else {
+          resultDiv.innerText = "Error: " + (data.error || "Prediction failed.");
+        }
+      } catch (err) {
+        resultDiv.innerText = "Error: " + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
